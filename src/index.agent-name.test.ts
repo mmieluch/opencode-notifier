@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest"
-import { extractAgentNameFromSessionTitle } from "./index"
+import { extractAgentNameFromSessionTitle } from "./notifier.ts"
 
 describe("extractAgentNameFromSessionTitle", () => {
   test("extracts agent name from subagent suffix", () => {

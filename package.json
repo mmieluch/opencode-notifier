@@ -5,8 +5,6 @@
   "author": "mohak34",
   "license": "MIT",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mohak34/opencode-notifier.git"
@@ -17,6 +15,8 @@
   },
   "files": [
     "dist",
+    "src",
+    "!src/*.test.ts",
     "sounds",
     "logos"
   ],
@@ -28,18 +28,27 @@
     "alerts"
   ],
   "dependencies": {
+    "@opencode/plugin": "^2.0.3",
     "is-wsl": "^3.1.0",
     "node-notifier": "^10.0.1"
   },
   "devDependencies": {
-    "@opencode-ai/plugin": "^1.0.224",
     "@types/node": "^22.20.3",
     "@types/node-notifier": "^8.0.5",
     "typescript": "5.9.3",
     "tsup": "^8.5.1",
     "vitest": "^5.0.1"
   },
-  "peerDependencies": {
-    "@opencode-ai/plugin": ">=1.0.0"
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "bun": "./src/index.ts",
+      "import": "./dist/index.js"
+    },
+    "./tui": {
+      "types": "./dist/tui.d.ts",
+      "bun": "./src/tui.ts",
+      "import": "./dist/tui.js"
+    }
   }
 }

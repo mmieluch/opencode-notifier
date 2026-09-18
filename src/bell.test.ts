@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, vi } from "vitest"
-import { ringBell, resetBellState } from "./bell"
+import { ringBell, resetBellState } from "./bell.ts"
 
 describe("ringBell", () => {
   beforeEach(() => {

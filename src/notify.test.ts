@@ -3,7 +3,7 @@ import {
   buildOsascriptNotificationArgs,
   formatGhosttyNotificationSequence,
   parseNotifySendOutputLine,
-} from "./notify"
+} from "./notify.ts"
 
 describe("formatGhosttyNotificationSequence", () => {
   test("returns plain OSC 9 outside tmux", () => {

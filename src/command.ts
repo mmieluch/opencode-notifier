@@ -1,5 +1,5 @@
 import { spawn } from "child_process"
-import type { EventType, NotifierConfig } from "./config"
+import type { EventType, NotifierConfig } from "./config.ts"
 
 function substituteTokens(value: string, event: EventType, message: string, sessionTitle?: string | null, agentName?: string | null, projectName?: string | null, timestamp?: string | null, turn?: number | null): string {
   let result = value.replaceAll("{event}", event).replaceAll("{message}", message)

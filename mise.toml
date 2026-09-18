@@ -12,7 +12,7 @@ run = "node --eval \"require('node:fs').rmSync('dist', { recursive: true, force:
 [tasks.build]
 description = "Build the plugin and declarations"
 depends = ["clean"]
-run = "npm exec -- tsup src/index.ts --format esm --dts --external node-notifier --out-dir dist"
+run = "npm exec -- tsup src/index.ts src/tui.ts --format esm --dts --external node-notifier --external @opencode/plugin --out-dir dist"
 
 [tasks.typecheck]
 description = "Type-check without emitting files"

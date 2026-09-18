@@ -58,7 +58,6 @@ export interface NotifierConfig {
   showIcon: boolean
   customIconPath: string | null
   suppressWhenFocused: boolean
-  enableOnDesktop: boolean
   notificationSystem: "osascript" | "node-notifier" | "ghostty"
   suppressGhosttySound: boolean
   linux: LinuxConfig
@@ -137,7 +136,6 @@ const DEFAULT_CONFIG: NotifierConfig = {
   showIcon: true,
   customIconPath: null,
   suppressWhenFocused: true,
-  enableOnDesktop: false,
   notificationSystem: "osascript",
   suppressGhosttySound: false,
   linux: {
@@ -307,7 +305,6 @@ export function loadConfig(): NotifierConfig {
       showIcon: userConfig.showIcon ?? DEFAULT_CONFIG.showIcon,
       customIconPath: userConfig.customIconPath ?? DEFAULT_CONFIG.customIconPath,
       suppressWhenFocused: userConfig.suppressWhenFocused ?? DEFAULT_CONFIG.suppressWhenFocused,
-      enableOnDesktop: typeof userConfig.enableOnDesktop === "boolean" ? userConfig.enableOnDesktop : DEFAULT_CONFIG.enableOnDesktop,
       notificationSystem:
         userConfig.notificationSystem === "node-notifier"
           ? "node-notifier"

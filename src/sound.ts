@@ -3,7 +3,7 @@ import { join, dirname } from "path"
 import { fileURLToPath } from "url"
 import { existsSync } from "fs"
 import { spawn } from "child_process"
-import type { EventType } from "./config"
+import type { EventType } from "./config.ts"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const DEBOUNCE_MS = 1000

@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from "vitest"
-import { shouldSuppressPermissionAlert, resetPermissionAlertState, prunePermissionAlertState } from "./permission-dedupe"
+import { shouldSuppressPermissionAlert, resetPermissionAlertState, prunePermissionAlertState } from "./permission-dedupe.ts"
 
 describe("permission dedupe", () => {
   beforeEach(() => {
