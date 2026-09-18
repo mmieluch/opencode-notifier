@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach } from "bun:test"
+import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach } from "vitest"
 import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync } from "fs"
 import { join } from "path"
 import { homedir } from "os"
@@ -347,6 +347,6 @@ describe("Config", () => {
     const { getStatePath } = await import("./config")
     const statePath = getStatePath()
 
-    expect(statePath).toEndWith("opencode-notifier-state.json")
+    expect(statePath.endsWith("opencode-notifier-state.json")).toBe(true)
   })
 })

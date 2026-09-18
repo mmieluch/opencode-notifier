@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, mock } from "bun:test"
+import { describe, test, expect, beforeEach, vi } from "vitest"
 import { ringBell, resetBellState } from "./bell"
 
 describe("ringBell", () => {
@@ -8,7 +8,7 @@ describe("ringBell", () => {
 
   test("writes BEL when stdout is TTY", async () => {
     const originalIsTTY = process.stdout.isTTY
-    const writeSpy = mock((_: string, cb?: () => void) => {
+    const writeSpy = vi.fn((_: string, cb?: () => void) => {
       cb?.()
       return true
     })
@@ -28,7 +28,7 @@ describe("ringBell", () => {
 
   test("skips when stdout is not TTY", async () => {
     const originalIsTTY = process.stdout.isTTY
-    const writeSpy = mock((_: string, cb?: () => void) => {
+    const writeSpy = vi.fn((_: string, cb?: () => void) => {
       cb?.()
       return true
     })

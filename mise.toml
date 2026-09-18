@@ -1,0 +1,36 @@
+[tools]
+node = "26.1.0"
+
+[tasks.install]
+description = "Install locked dependencies"
+run = "npm ci"
+
+[tasks.clean]
+description = "Remove generated output"
+run = "node --eval \"require('node:fs').rmSync('dist', { recursive: true, force: true })\""
+
+[tasks.build]
+description = "Build the plugin and declarations"
+depends = ["clean"]
+run = "npm exec -- tsup src/index.ts --format esm --dts --external node-notifier --out-dir dist"
+
+[tasks.typecheck]
+description = "Type-check without emitting files"
+run = "npm exec -- tsc -p tsconfig.json --noEmit"
+
+[tasks.test]
+description = "Run the test suite"
+run = "npm exec -- vitest run"
+
+[tasks.check]
+description = "Run all verification"
+run = [
+  "mise run typecheck",
+  "mise run test",
+  "mise run build",
+]
+
+[tasks.pack]
+description = "Inspect the package that would be published"
+depends = ["build"]
+run = "npm pack --dry-run"
