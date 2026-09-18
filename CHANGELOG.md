@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0-v2.0] - Unreleased
+
+### Changed
+- Migrated the plugin entrypoints and event handling to the OpenCode v2 API.
+- Moved terminal-facing notification behavior into a v2 TUI companion plugin.
+- Replaced Bun development tooling with Mise, Node.js, TypeScript, npm, and Vitest.
+- Renamed the maintained fork to `@mmieluch/opencode-notifier`.
+
+### Added
+- Native v2 event mappings for permissions, question forms, successful root and subagent executions, failures, and interruptions.
+- Cleanup for all TUI event subscriptions.
+- Unit coverage for the v2 event adapter.
+
 ## [0.2.8] - 2026-06-05
 
 ### Fixed

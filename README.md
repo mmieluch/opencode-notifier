@@ -1,18 +1,24 @@
 # opencode-notifier
 
-OpenCode plugin that plays sounds and sends system notifications when permission is needed, generation completes, errors occur, or the question tool is invoked. Works on macOS, Linux, and Windows.
+OpenCode v2 plugin that plays sounds and sends system notifications when permission is needed, a question is asked, generation completes, or an error occurs. Works on macOS, Linux, and Windows.
 
 ## Quick Start
 
-Add this to your `opencode.json`:
+While v2 development is in progress, install this repository's `v2` branch:
 
-```json
-{
-  "plugin": ["@mohak34/opencode-notifier@latest"]
-}
+```bash
+opencode plugin add 'github:mmieluch/opencode-notifier#v2'
 ```
 
 Restart OpenCode. Done.
+
+If you also have OpenCode's bundled notification plugin enabled and receive duplicate alerts, disable that listener in `~/.config/opencode/cli.json` while keeping this plugin configured in `opencode.json`:
+
+```jsonc
+{
+  "plugins": ["-opencode.notifications"]
+}
+```
 
 ## What it does
 
@@ -21,9 +27,11 @@ You'll get notified when:
 - OpenCode needs permission to run something
 - Your session finishes
 - An error happens
-- The question tool pops up
+- OpenCode presents a question form
 
-There's also `subagent_complete` for when subagents finish, and `user_cancelled` for when you press ESC to abort -- both are silent by default so you don't get spammed.
+There's also `subagent_complete` for when subagents finish, `interrupted` for non-user interruptions, and `user_cancelled` for when you cancel an execution. Subagent completion and user cancellation are silent by default so you don't get spammed.
+
+This branch targets OpenCode v2 only. The older v1 implementation remains on the repository's `main` branch while the migration is being validated.
 
 ## Setup by platform
 
@@ -72,7 +80,6 @@ Create `~/.config/opencode/opencode-notifier.json` with the defaults:
   "showIcon": true,
   "customIconPath": null,
   "suppressWhenFocused": true,
-  "enableOnDesktop": false,
   "notificationSystem": "osascript",
   "suppressGhosttySound": false,
   "linux": {
@@ -151,7 +158,6 @@ Create `~/.config/opencode/opencode-notifier.json` with the defaults:
   "showSessionTitle": false,
   "showIcon": true,
   "suppressWhenFocused": true,
-  "enableOnDesktop": false,
   "notificationSystem": "osascript",
   "suppressGhosttySound": false
 }
@@ -167,7 +173,6 @@ Create `~/.config/opencode/opencode-notifier.json` with the defaults:
 - `showIcon` - Show OpenCode icon, Windows/Linux only (default: true)
 - `customIconPath` - Path to a custom icon for notifications. Useful on WSL where Windows paths are needed (default: null)
 - `suppressWhenFocused` - Skip notifications and sounds when the terminal is the active window (default: true). See [Focus detection](#focus-detection) for platform details
-- `enableOnDesktop` - Run the plugin on Desktop and Web clients (default: false). When false, the plugin only runs on CLI. Set to true if you want notifications/sounds/commands on Desktop/Web — useful if you want custom commands (Telegram, webhooks) but don't care about built-in notifications
 - `notificationSystem` - macOS only: `"osascript"`, `"node-notifier"`, or `"ghostty"` (default: "osascript"). Use `"ghostty"` if you're running Ghostty terminal for native OSC 9 notifications
 - `suppressGhosttySound` - macOS only: when `true` with `notificationSystem: "ghostty"`, skips the plugin's sound to avoid duplicating macOS Notification Center's default sound (default: false)
 - `minDuration` - Suppress `complete` and `subagent_complete` notifications when session finishes faster than this many seconds (default: 0). See [Minimum duration threshold](#minimum-duration-threshold)
@@ -176,6 +181,8 @@ Create `~/.config/opencode/opencode-notifier.json` with the defaults:
 ### Events
 
 Control each event separately:
+
+The initial OpenCode v2 port currently emits `permission`, `complete`, `subagent_complete`, `error`, `question`, `interrupted`, and `user_cancelled`. The remaining legacy event settings are retained in the configuration format while their v2 lifecycle mappings are evaluated.
 
 ```json
 {
@@ -468,48 +475,13 @@ The action button is only enabled on Linux KDE sessions where `kdotool` is avail
 
 ## Updating
 
-OpenCode caches plugin packages under `~/.cache/opencode`. If you switch between `latest`, `beta`, or a pinned version and OpenCode still uses the old plugin, close OpenCode and remove the cached package.
-
-Linux/macOS:
+Update the configured development branch explicitly:
 
 ```bash
-rm -rf ~/.cache/opencode/packages/@mohak34/opencode-notifier*
-rm -rf ~/.cache/opencode/node_modules/@mohak34/opencode-notifier
-rm -f ~/.cache/opencode/bun.lock
+opencode plugin update 'github:mmieluch/opencode-notifier#v2'
 ```
 
-Windows PowerShell:
-
-```powershell
-Remove-Item -Recurse -Force "$env:USERPROFILE\.cache\opencode\packages\@mohak34\opencode-notifier*" -ErrorAction SilentlyContinue
-Remove-Item -Recurse -Force "$env:USERPROFILE\.cache\opencode\node_modules\@mohak34\opencode-notifier" -ErrorAction SilentlyContinue
-Remove-Item -Force "$env:USERPROFILE\.cache\opencode\bun.lock" -ErrorAction SilentlyContinue
-```
-
-Then reopen OpenCode. It will download the plugin again.
-
-To avoid cache confusion while testing, pin the exact version in `opencode.json` instead of using a moving tag:
-
-```json
-{
-  "plugin": ["@mohak34/opencode-notifier@x.y.z"]
-}
-```
-
-Check the version published under a tag:
-
-```bash
-npm view @mohak34/opencode-notifier@latest version
-npm view @mohak34/opencode-notifier@beta version
-```
-
-Check the version OpenCode cached:
-
-```bash
-cat ~/.cache/opencode/packages/@mohak34/opencode-notifier@latest/node_modules/@mohak34/opencode-notifier/package.json | grep version
-```
-
-If you use `@beta` or a pinned version, replace `latest` in the path with `beta` or the exact version, for example `0.2.9-beta.0`.
+Use a complete commit hash instead of `#v2` when you need a reproducible installation.
 
 ## Troubleshooting
 
@@ -610,18 +582,26 @@ This is a known Bun issue on Windows. Disable native notifications and use Power
 **Plugin not loading?**
 
 - Check your `opencode.json` or `config.json` syntax
-- Clear the cache (see Updating section)
+- Run the branch update command in the Updating section
 - Restart OpenCode
 
 **Plugin installed but no notifications/sounds?**
 
 - Check `suppressWhenFocused`: when `true` (default), notifications are skipped while OpenCode terminal is focused. Set to `false` to always notify.
-- Check `enableOnDesktop`: defaults to `false`, so the plugin won't run on Desktop/Web clients. Set to `true` if you need it there.
-- Verify the package version OpenCode cached:
-  ```bash
-  cat ~/.cache/opencode/packages/@mohak34/opencode-notifier@latest/node_modules/@mohak34/opencode-notifier/package.json | grep version
-  ```
-  If you use `@beta` or a pinned version, replace `latest` in the path with `beta` or the exact version.
+
+## Development
+
+The project uses [Mise](https://mise.jdx.dev/) to pin Node and run every development task. `package.json` contains package metadata and dependencies only; it does not contain scripts.
+
+```bash
+mise install
+mise run install
+mise run check
+```
+
+Individual tasks are available as `mise run typecheck`, `mise run test`, `mise run build`, and `mise run pack`.
+
+OpenCode branch installations select the package's `"bun"` export and execute the TypeScript source directly. Standard Node consumers select the compiled ESM under `dist`; run `mise run build` before packing or publishing. Direct Node installation from an unbuilt Git checkout is intentionally unsupported because the project does not use package lifecycle scripts or commit generated output.
 
 ## Changelog
 
