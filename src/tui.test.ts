@@ -6,6 +6,9 @@ type Handler = (event: any) => void
 
 function createContext() {
   const handlers = new Map<string, Handler>()
+  let route: ReturnType<Context["ui"]["router"]["current"]> = { type: "session", sessionID: "ses_root" }
+  let tabs: ReturnType<Context["ui"]["tabs"]["list"]> = []
+  let tabsEnabled = false
   const sessions = new Map<string, any>([
     ["ses_root", { id: "ses_root", title: "Root session", location: { directory: "/workspace/project" } }],
     [
@@ -15,6 +18,16 @@ function createContext() {
         parentID: "ses_root",
         title: "Child task (@explore subagent)",
         location: { directory: "/workspace/project" },
+      },
+    ],
+    ["ses_other", { id: "ses_other", title: "Other session", location: { directory: "/workspace/other" } }],
+    [
+      "ses_other_child",
+      {
+        id: "ses_other_child",
+        parentID: "ses_other",
+        title: "Other child",
+        location: { directory: "/workspace/other" },
       },
     ],
   ])
@@ -28,10 +41,24 @@ function createContext() {
       }),
       session: {
         get: vi.fn((sessionID: string) => sessions.get(sessionID)),
+        root: vi.fn((sessionID: string) => {
+          let current = sessions.get(sessionID)
+          while (current?.parentID) current = sessions.get(current.parentID)
+          return current?.id ?? sessionID
+        }),
         sync: vi.fn(async () => undefined),
       },
     },
-  } as unknown as Pick<Context, "data" | "location">
+    ui: {
+      router: {
+        current: vi.fn(() => route),
+      },
+      tabs: {
+        enabled: vi.fn(() => tabsEnabled),
+        list: vi.fn(() => tabs),
+      },
+    },
+  } as unknown as Pick<Context, "data" | "location" | "ui">
 
   const emit = (type: string, data: object, created = 1_000) => {
     const handler = handlers.get(type)
@@ -39,7 +66,19 @@ function createContext() {
     handler({ type, data, created })
   }
 
-  return { context, emit, sessions, unsubscribe }
+  return {
+    context,
+    emit,
+    sessions,
+    unsubscribe,
+    setRoute(next: typeof route) {
+      route = next
+    },
+    setTabs(next: typeof tabs) {
+      tabs = next
+      tabsEnabled = true
+    },
+  }
 }
 
 describe("v2 TUI event mapping", () => {
@@ -90,6 +129,31 @@ describe("v2 TUI event mapping", () => {
     await vi.waitFor(() => expect(dispatch).toHaveBeenCalledOnce())
     expect(context.data.session.sync).toHaveBeenCalledWith("ses_child")
     expect(dispatch.mock.calls[0]?.[0]).toMatchObject({ eventType: "subagent_complete" })
+  })
+
+  test("ignores events for sessions not represented by this TUI", async () => {
+    const { context, emit } = createContext()
+    const dispatch = vi.fn(async () => undefined)
+    registerNotifier(context, dispatch)
+
+    emit("session.execution.succeeded", { sessionID: "ses_other" })
+    emit("session.execution.succeeded", { sessionID: "ses_other_child" })
+
+    await vi.waitFor(() => expect(context.data.session.get).toHaveBeenCalledWith("ses_other_child"))
+    expect(dispatch).not.toHaveBeenCalled()
+  })
+
+  test("handles child events for a root session open in this TUI's tabs", async () => {
+    const { context, emit, setRoute, setTabs } = createContext()
+    setRoute({ type: "home" })
+    setTabs([{ sessionID: "ses_root", active: false, busy: true, attention: false }])
+    const dispatch = vi.fn(async () => undefined)
+    registerNotifier(context, dispatch)
+
+    emit("session.execution.succeeded", { sessionID: "ses_child" })
+
+    await vi.waitFor(() => expect(dispatch).toHaveBeenCalledOnce())
+    expect(dispatch.mock.calls[0]?.[0]).toMatchObject({ eventType: "subagent_complete", sessionID: "ses_child" })
   })
 
   test("maps failures and interruptions without producing completion", async () => {

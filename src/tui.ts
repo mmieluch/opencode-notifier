@@ -15,7 +15,7 @@ export interface NotificationRequest {
 
 export type NotificationDispatch = (request: NotificationRequest) => Promise<void>
 
-type NotifierContext = Pick<Context, "data" | "location">
+type NotifierContext = Pick<Context, "data" | "location" | "ui">
 
 async function defaultDispatch(request: NotificationRequest): Promise<void> {
   const config = loadConfig()
@@ -45,6 +45,15 @@ export function registerNotifier(context: NotifierContext, dispatch: Notificatio
     return session
   }
 
+  const hasSession = (sessionID: string): boolean => {
+    const rootID = context.data.session.root(sessionID)
+    const route = context.ui.router.current()
+    if (route.type === "session" && context.data.session.root(route.sessionID) === rootID) {
+      return true
+    }
+    return context.ui.tabs.enabled() && context.ui.tabs.list().some((tab) => tab.sessionID === rootID)
+  }
+
   const notify = async (
     sessionID: string,
     eventType: EventType | ((isChild: boolean) => EventType),
@@ -52,6 +61,7 @@ export function registerNotifier(context: NotifierContext, dispatch: Notificatio
   ): Promise<void> => {
     const session = await getSession(sessionID)
     if (!active) return
+    if (!hasSession(sessionID)) return
     await dispatch({
       eventType: typeof eventType === "function" ? eventType(Boolean(session?.parentID)) : eventType,
       sessionID,
